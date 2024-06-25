@@ -24,7 +24,7 @@ This is a proof-of-concept application that is intended to be used as a simple e
 
 ## Overview
 
-This application allows you to customize the contact cards, brand logo, background, etc. that make up the UI/controls of a RoomOS device in PWA/Kiosk device. You can create multiple URLs and activate them on a compatible device of your choice. Once activated, the application uses [cloud xAPI requests](https://roomos.cisco.com/docs/Introduction.md#the-xapi) with a Webex Bot token to control the device (make calls, etc.).
+This application will create an instant meeting on a device, and automatically add other video devices in the org to the meeting, provided the other devices have had a bot added to their workspaces in [Control Hub](https://admin.webex.com).
 
 ## Setup
 
