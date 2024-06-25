@@ -35,8 +35,8 @@ These instructions assume that you have administrator access to an Org's Webex C
 2. Visit the org's [Control Hub device page](https://admin.webex.com/devices), choose the device placing the emergency dial and make the following changes using the "All configuration" link:
    - Set the value for `NetworkServices > HTTP > Mode` to `HTTP+HTTPS`
 
-3. Apply the emergency-dial macro to the device that will be making the emergency meeting.  Edit the bot token field in the config of the macro with the bot token value you saved from step 1.
-4. Apply the auto-answer macro to the answering devices.  Edit the AUTOANSWER_NUMBERS array to include the string value of the Spark.id of the device that will be creating the emergency meetings (found in the device's setting using the device's web UI.
+3. Apply the emergency-dial macro to the device that will be making the emergency meeting.  Edit the bot token field in the config of the emergency-dial.js macro file with the bot token value you saved from step 1.
+4. Apply the auto-answer macro to the answering devices.  Edit the AUTOANSWER_NUMBERS array in the auto-answer.js macro file to include the string value of the Spark.id of the device that will be creating the emergency meetings (found in the device's setting using the device's web UI.
 
 ## Demo
 
