@@ -46,12 +46,36 @@ var SYSTEM_SIP_URI; //Do not manually set.
 var ACCESS_TOKEN; //Do not manually set.
 var REQUIRE_TAG = false; //Do not manually set.
 
-xapi.event.on('UserInterface Extensions Panel Clicked', (event) => {
+xapi.event.on('UserInterface Extensions Panel Clicked', async function(event){
     if(event.PanelId == 'emergency_dial'){
       console.log(event.PanelId, " pressed");
-      xapi.Config.UserInterface.InstantMeeting.Invite.set("ManualAdd");
-      xapi.Command.Webex.Meetings.InstantMeeting.Start();
+      xapi.command("UserInterface Message Prompt Display", {
+        Title: "Emergency Dial",
+        Text: 'This is for emergencies only. Do you want to continue?',
+        FeedbackId: 'meeting_start',
+        'Option.1': 'Continue',
+        'Option.2': 'Exit',
+      }).catch((error) => { 
+        console.error("Prompt Display Error:")
+        console.error(error); 
+      });
     }
+});
+
+
+xapi.event.on('UserInterface Message Prompt Response', async function(event){
+  console.log('FeedbackId: ' + event.FeedbackId + ' Option: '+ event.OptionId);
+  switch(event.FeedbackId){
+    case 'meeting_start':
+      switch(event.OptionId){
+        case '1':   // continue with meeting start / invite others.
+          await xapi.Config.UserInterface.InstantMeeting.Invite.set("ManualAdd");
+          xapi.Command.Webex.Meetings.InstantMeeting.Start();
+          break;
+        case '2':   // exit the prompt without starting a meeting
+          break;
+      }
+  }
 });
 
 xapi.Event.CallSuccessful.on(async event => {
@@ -63,10 +87,19 @@ xapi.Event.CallSuccessful.on(async event => {
   let resp = await listJoinDevices();
   let devices = JSON.parse(resp.Body).items;
   if(devices.length > 0){
+    let added_devices = [];
     for (let device of devices){
       if(device.primarySipUrl !== SYSTEM_SIP_URI){
-        console.log("Adding Device:", device.primarySipUrl);
-        xapi.Command.Conference.Participant.Add({ CallId: call.id, DisplayName: device.displayName, Number: device.primarySipUrl });
+        if(added_devices.indexOf(device.primarySipUrl) < 0){
+          console.log("Adding Device:", device.primarySipUrl);
+          xapi.Command.Conference.Participant.Add({ CallId: call.id, DisplayName: device.displayName, Number: device.primarySipUrl }).catch((e) => {
+            console.error("Participant Add Error:");
+            console.error(e);
+          });
+          added_devices.push(device.primarySipUrl);
+        } else {
+          console.log(`Already dialed ${device.primarySipUrl}, likely pulled a navigator or accessory from this workspace when listing devices.`);
+        }
       }
     }
   } else {
@@ -80,6 +113,7 @@ async function listJoinDevices(){
   if(REQUIRE_TAG){
     url += `?tag=${config['tag']}`
   }
+  console.log(`list devices url: ${url}`);
   let requestConfig = {
     //AllowInsecureHTTPS: true,
     Header: ["Content-Type: application/json", "Authorization: Bearer " + ACCESS_TOKEN],
@@ -115,7 +149,7 @@ async function main(){
       <Version>1.8</Version>
       <Panel>
         <Order>1</Order>
-        <Type>Statusbar</Type>
+        <Location>HomeScreen</Location>
         <Icon>Helpdesk</Icon>
         <Color>${MACRO_COLOR}</Color>
         <Name>${MACRO_NAME}</Name>
