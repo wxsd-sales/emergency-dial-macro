@@ -47,8 +47,8 @@ var ACCESS_TOKEN; //Do not manually set.
 var REQUIRE_TAG = false; //Do not manually set.
 
 xapi.event.on('UserInterface Extensions Panel Clicked', async function(event){
+    console.log(event.PanelId, " pressed");
     if(event.PanelId == 'emergency_dial'){
-      console.log(event.PanelId, " pressed");
       xapi.command("UserInterface Message Prompt Display", {
         Title: "Emergency Dial",
         Text: 'This is for emergencies only. Do you want to continue?',
@@ -59,6 +59,12 @@ xapi.event.on('UserInterface Extensions Panel Clicked', async function(event){
         console.error("Prompt Display Error:")
         console.error(error); 
       });
+    } else if(event.PanelId == "end_meeting"){
+      const calls = await xapi.Status.Conference.Call.get();
+      if (calls.length == 0) return;
+      const call = calls.pop();
+      if(call.SessionType != 'InstantMeeting') return;
+      xapi.Command.Conference.EndMeeting({ CallId: call.id});
     }
 });
 
@@ -157,6 +163,8 @@ async function main(){
       </Panel>
     </Extensions>`
   );
+
+
   if(HOMESCREEN_CONTROLS_HIDDEN){
     //xapi.Config.UserInterface.Features.HideAll.set(true);
     xapi.Config.UserInterface.Features.Call.Start.set("Hidden");
@@ -171,6 +179,7 @@ async function main(){
     xapi.Config.UserInterface.Features.Calendar.Start.set("Hidden");
     xapi.Config.UserInterface.SettingsMenu.Visibility.set("Hidden");
     xapi.Config.UserInterface.RoomStatusMenu.Visibility.set("Hidden");
+    xapi.Config.UserInterface.Features.Call.End.set("Hidden");
   }
   if(config["bot_token"]){
     ACCESS_TOKEN = config["bot_token"];
